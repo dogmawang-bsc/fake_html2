@@ -641,7 +641,7 @@ app.delete('/api/delete/file', (req, res) => {
 // ===================== 启动服务器 =====================
 initDataFiles(); // 初始化默认配置文件
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 服务器已启动：`);
     console.log(`- 访问地址: http://localhost:${PORT}`);
     console.log(`- 管理页面: http://localhost:${PORT}/admin.html`);
