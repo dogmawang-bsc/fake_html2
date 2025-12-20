@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google评论系统 - 管理后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /**
+         * 管理后台样式修改说明：
+         * 1. 新增评论用户头像上传功能样式
+         * 2. 优化图片预览样式，适配9:16比例
+         * 3. 保持原有样式结构，仅新增必要样式
+         */
+        :root {
+            --primary: #4285F4;
+            --success: #34A853;
+            --danger: #EA4335;
+            --warning: #FBBC05;
+            --gray: #70757A;
+            --light-gray: #F8F9FA;
+            --border-gray: #E0E0E0;
+            --bg-dark: #121212;
+            --text-light: #E0E0E0;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Roboto, Arial, sans-serif;
+            background-color: var(--light-gray);
+            color: #333;
+            line-height: 1.5;
+            padding: 16px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gray);
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-gray);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #3367d6;
+        }
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #2d8f46;
+        }
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #d93025;
+        }
+        .btn-outline {
+            border: 1px solid var(--border-gray);
+            background: white;
+            color: #333;
+        }
+        .btn-outline:hover {
+            background-color: var(--light-gray);
+        }
+
+        /* 图片预览样式 - 适配16/9比例 */
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .image-preview {
+            width: 80px;
+            height: calc(80px * 9 / 16); /* 16/9比例 */
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid var(--border-gray);
+        }
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-remove {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--danger);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid white;
+        }
+
+        /* 星级样式 */
+        .star-rating {
+            display: flex;
+            gap: 4px;
+            font-size: 24px;
+            color: var(--border-gray);
+            margin-bottom: 16px;
+        }
+        .star-rating .star {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .star-rating .star.active {
+            color: var(--warning);
+        }
+
+        /* 评论列表样式 */
+        .review-item {
+            padding: 16px;
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .review-stars {
+            display: flex;
+            color: var(--warning);
+            margin-bottom: 8px;
+        }
+
+        /* 提示框样式 */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .alert-success {
+            background-color: #E6F4EA;
+            color: #1F7536;
+        }
+        .alert-error {
+            background-color: #FEF0F0;
+            color: #B91C1C;
+        }
+        .hidden {
+            display: none;
+        }
+
+        /* 头像上传预览样式 */
+        .avatar-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1px solid var(--border-gray);
+            margin-top: 8px;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <!-- 全局提示框 -->
+    <div id="globalAlert" class="alert hidden"></div>
+
+    <!-- 商家基础配置卡片 -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fas fa-store"></i> 商家基础配置
+        </div>
+        <div class="form-group">
+            <label class="form-label">商家名称</label>
+            <input type="text" class="form-input" id="restaurantName" placeholder="输入商家名称">
+        </div>
+        <div class="form-group">
+            <label class="form-label">商家评分</label>
+            <input type="number" step="0.1" min="0" max="5" class="form-input" id="restaurantRating" placeholder="0.0 - 5.0">
+        </div>
+        <div class="form-group">
+            <label class="form-label">商家地址</label>
+            <input type="text" class="form-input" id="restaurantAddr" placeholder="输入商家地址">
+        </div>
+        <div class="form-group">
+            <label class="form-label">联系电话</label>
+            <input type="text" class="form-input" id="restaurantPhone" placeholder="输入联系电话">
+        </div>
+        <div class="form-group">
+            <label class="form-label">商家类型</label>
+            <input type="text" class="form-input" id="restaurantType" placeholder="如：酒行、餐厅">
+        </div>
+        <div class="form-group">
+            <label class="form-label">营业状态</label>
+            <input type="text" class="form-input" id="restaurantStatus" placeholder="如：营业中、已打烊">
+        </div>
+        <div class="form-group">
+            <label class="form-label">真实评论页面地址（长按跳转）</label>
+            <input type="text" class="form-input" id="restaurantRealUrl" placeholder="如：https://maps.google.com/">
+        </div>
+        <div class="form-group">
+            <label class="form-label">商家简介</label>
+            <textarea class="form-textarea" id="restaurantIntro" placeholder="输入商家详细简介（支持换行）"></textarea>
+        </div>
+        <button class="btn btn-primary" id="saveBaseConfig">保存基础配置</button>
+    </div>
+
+    <!-- 商家图标配置卡片 -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fas fa-image"></i> 商家图标配置
+        </div>
+        <div class="form-group">
+            <label class="form-label">上传图标</label>
+            <input type="file" accept="image/*" id="iconUpload" class="form-input">
+        </div>
+        <div class="preview-container" id="iconPreview">
+            <!-- 图标预览 -->
+        </div>
+        <button class="btn btn-outline mt-4" id="removeIcon">移除当前图标</button>
+    </div>
+
+    <!-- 轮播图配置卡片 -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fas fa-sliders"></i> 轮播图配置（9:16比例）
+        </div>
+        <div class="form-group">
+            <label class="form-label">上传轮播图（最多10张，9:16比例最佳）</label>
+            <input type="file" accept="image/*" multiple id="imagesUpload" class="form-input">
+        </div>
+        <div class="preview-container" id="imagesPreview">
+            <!-- 轮播图预览 -->
+        </div>
+        <button class="btn btn-outline mt-4" id="clearImages">清空所有轮播图</button>
+    </div>
+
+    <!-- 评论管理卡片 - 新增用户头像上传 -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fas fa-comments"></i> 评论管理（支持用户头像上传）
+        </div>
+        <!-- 新增评论表单 - 新增用户头像上传 -->
+        <div class="form-group">
+            <label class="form-label">评论者名称</label>
+            <input type="text" class="form-input" id="newReviewName" placeholder="输入评论者名称">
+        </div>
+        <div class="form-group">
+            <label class="form-label">上传用户头像</label>
+            <input type="file" accept="image/*" id="userAvatarUpload" class="form-input">
+            <div class="avatar-preview" id="userAvatarPreview">
+                <!-- 头像预览 -->
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">用户标签</label>
+            <input type="text" class="form-input" id="newReviewLabel" placeholder="如：本地向导（可选）">
+        </div>
+        <div class="form-group">
+            <label class="form-label">评价数量</label>
+            <input type="text" class="form-input" id="newReviewCount" placeholder="如：104条评价（可选）">
+        </div>
+        <div class="form-group">
+            <label class="form-label">照片数量</label>
+            <input type="text" class="form-input" id="newReviewPhotoCount" placeholder="如：405张照片（可选）">
+        </div>
+        <div class="form-group">
+            <label class="form-label">评分</label>
+            <div class="star-rating" id="newReviewRating">
+                <i class="fas fa-star star active" data-rating="1"></i>
+                <i class="fas fa-star star active" data-rating="2"></i>
+                <i class="fas fa-star star active" data-rating="3"></i>
+                <i class="fas fa-star star active" data-rating="4"></i>
+                <i class="fas fa-star star active" data-rating="5"></i>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">评论时间</label>
+            <input type="text" class="form-input" id="newReviewTime" placeholder="如：4周前、3年前">
+        </div>
+        <div class="form-group">
+            <label class="form-label">评论内容</label>
+            <textarea class="form-textarea" id="newReviewContent" placeholder="输入评论内容"></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">上传评论图片（可选，9:16比例最佳）</label>
+            <input type="file" accept="image/*" multiple id="reviewImagesUpload" class="form-input">
+        </div>
+        <div class="preview-container" id="reviewImagesPreview">
+            <!-- 评论图片预览 -->
+        </div>
+        <button class="btn btn-primary" id="addNewReview">添加新评论</button>
+    </div>
+
+    <!-- 现有评论列表 -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fas fa-list"></i> 现有评论列表
+        </div>
+        <div id="reviewsList">
+            <!-- 评论列表由JS动态渲染 -->
+            <div>加载评论中...</div>
+        </div>
+    </div>
+
+    <!-- 全局保存按钮 -->
+    <div class="text-center mt-4">
+        <button class="btn btn-success text-lg px-8 py-3" id="saveAllConfig">
+            <i class="fas fa-save"></i> 保存所有配置
+        </button>
+    </div>
+    <script>
+        /**
+         * 管理后台逻辑修改说明：
+         * 1. 新增评论用户头像上传功能（接口：/api/upload/avatar）
+         * 2. 支持商家真实跳转地址配置（长按图标跳转）
+         * 3. 适配9:16比例图片预览
+         * 4. 保持原有功能完整，仅新增/修改必要逻辑
+         */
+        const API_BASE = ''; // 本地运行留空，部署时填写服务器地址
+        let currentConfig = {
+            name: '',
+            rating: 0,
+            addr: '',
+            phone: '',
+            type: '',
+            status: '',
+            realUrl: '', // 真实评论页面地址
+            intro: '',
+            icon: '',
+            images: []
+        };
+        let currentReviews = [];
+        let newIconFile = null;
+        let newImageFiles = [];
+        let newReviewImageFiles = [];
+        let newUserAvatarFile = null; // 新增：评论用户头像文件
+        let selectedRating = 5; // 默认评分
+
+        // ===================== 工具函数 =====================
+        const showAlert = (msg, isSuccess = true) => {
+            const alertEl = document.getElementById('globalAlert');
+            alertEl.textContent = msg;
+            alertEl.className = `alert ${isSuccess ? 'alert-success' : 'alert-error'}`;
+            setTimeout(() => alertEl.className = 'alert hidden', 3000);
+        };
+
+        const safeParseResponse = async (response) => {
+            try {
+                return await response.json();
+            } catch (err) {
+                return { code: 500, msg: '服务器响应格式错误' };
+            }
+        };
+
+        // ===================== 基础配置加载/保存 =====================
+        const fetchRestaurantConfig = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/restaurant`);
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    currentConfig = data.data;
+                    // 填充表单
+                    document.getElementById('restaurantName').value = currentConfig.name || '';
+                    document.getElementById('restaurantRating').value = currentConfig.rating || 4.6;
+                    document.getElementById('restaurantAddr').value = currentConfig.addr || '';
+                    document.getElementById('restaurantPhone').value = currentConfig.phone || '';
+                    document.getElementById('restaurantType').value = currentConfig.type || '';
+                    document.getElementById('restaurantStatus').value = currentConfig.status || '';
+                    document.getElementById('restaurantRealUrl').value = currentConfig.realUrl || 'https://maps.google.com/';
+                    document.getElementById('restaurantIntro').value = currentConfig.intro || '';
+                    
+                    // 加载预览
+                    renderIconPreview();
+                    renderImagesPreview();
+                } else {
+                    showAlert(`加载配置失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`加载配置异常: ${err.message}`, false);
+            }
+        };
+
+        const saveBaseConfig = async () => {
+            try {
+                const newConfig = {
+                    ...currentConfig,
+                    name: document.getElementById('restaurantName').value.trim(),
+                    rating: parseFloat(document.getElementById('restaurantRating').value) || 4.6,
+                    addr: document.getElementById('restaurantAddr').value.trim(),
+                    phone: document.getElementById('restaurantPhone').value.trim(),
+                    type: document.getElementById('restaurantType').value.trim(),
+                    status: document.getElementById('restaurantStatus').value.trim(),
+                    realUrl: document.getElementById('restaurantRealUrl').value.trim(), // 真实跳转地址
+                    intro: document.getElementById('restaurantIntro').value.trim()
+                };
+
+                const res = await fetch(`${API_BASE}/api/restaurant`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newConfig)
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    currentConfig = data.data;
+                    showAlert('基础配置保存成功！');
+                } else {
+                    showAlert(`保存失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`保存异常: ${err.message}`, false);
+            }
+        };
+
+        // ===================== 图标配置 =====================
+        const renderIconPreview = () => {
+            const previewEl = document.getElementById('iconPreview');
+            previewEl.innerHTML = '';
+            
+            if (currentConfig.icon) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'image-preview';
+                previewItem.innerHTML = `
+                    <img src="${API_BASE}/${currentConfig.icon}" alt="商家图标">
+                    <div class="image-remove" id="removeIconBtn"><i class="fas fa-times"></i></div>
+                `;
+                previewEl.appendChild(previewItem);
+                document.getElementById('removeIconBtn').addEventListener('click', removeIcon);
+            }
+        };
+
+        const uploadIcon = async (file) => {
+            if (!file) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('icon', file);
+                
+                const res = await fetch(`${API_BASE}/api/upload/icon`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    currentConfig.icon = data.data.iconPath;
+                    await saveBaseConfig();
+                    renderIconPreview();
+                    showAlert('图标上传成功！');
+                } else {
+                    showAlert(`图标上传失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`图标上传异常: ${err.message}`, false);
+            }
+        };
+
+        const removeIcon = async () => {
+            if (!currentConfig.icon) {
+                showAlert('暂无图标可移除', false);
+                return;
+            }
+
+            try {
+                // 删除文件
+                const delRes = await fetch(`${API_BASE}/api/delete/file`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filePath: currentConfig.icon })
+                });
+                const delData = await safeParseResponse(delRes);
+                
+                // 更新配置
+                currentConfig.icon = '';
+                await saveBaseConfig();
+                renderIconPreview();
+                
+                if (delData.code === 200) showAlert('图标已移除！');
+                else showAlert(`文件删除失败: ${delData.msg}`, false);
+            } catch (err) {
+                showAlert(`移除图标异常: ${err.message}`, false);
+            }
+        };
+
+        // ===================== 轮播图配置（9:16比例） =====================
+        const renderImagesPreview = () => {
+            const previewEl = document.getElementById('imagesPreview');
+            previewEl.innerHTML = '';
+            
+            if (currentConfig.images && currentConfig.images.length > 0) {
+                currentConfig.images.forEach((imgPath, index) => {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'image-preview'; // 9:16比例样式
+                    previewItem.innerHTML = `
+                        <img src="${API_BASE}/${imgPath}" alt="轮播图${index+1}">
+                        <div class="image-remove" data-index="${index}"><i class="fas fa-times"></i></div>
+                    `;
+                    previewEl.appendChild(previewItem);
+                    previewItem.querySelector('.image-remove').addEventListener('click', (e) => {
+                        removeImage(parseInt(e.target.closest('.image-remove').dataset.index));
+                    });
+                });
+            }
+        };
+
+        const removeImage = async (index) => {
+            if (!currentConfig.images || index < 0 || index >= currentConfig.images.length) {
+                showAlert('轮播图索引无效', false);
+                return;
+            }
+
+            const imgPath = currentConfig.images[index];
+            try {
+                const delRes = await fetch(`${API_BASE}/api/delete/file`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filePath: imgPath })
+                });
+                const delData = await safeParseResponse(delRes);
+                
+                currentConfig.images.splice(index, 1);
+                await saveBaseConfig();
+                renderImagesPreview();
+                
+                if (delData.code === 200) showAlert('轮播图已移除！');
+                else showAlert(`文件删除失败: ${delData.msg}`, false);
+            } catch (err) {
+                showAlert(`移除轮播图异常: ${err.message}`, false);
+            }
+        };
+
+        const uploadImages = async (files) => {
+            if (!files || files.length === 0) return;
+            
+            try {
+                const formData = new FormData();
+                Array.from(files).forEach(file => formData.append('images', file));
+                
+                const res = await fetch(`${API_BASE}/api/upload/images`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    currentConfig.images = [...currentConfig.images, ...data.data.imagePaths];
+                    await saveBaseConfig();
+                    renderImagesPreview();
+                    showAlert(`成功上传${files.length}张轮播图！`);
+                } else {
+                    showAlert(`轮播图上传失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`轮播图上传异常: ${err.message}`, false);
+            }
+        };
+
+        const clearAllImages = async () => {
+            if (!currentConfig.images || currentConfig.images.length === 0) {
+                showAlert('暂无轮播图可清空', false);
+                return;
+            }
+
+            try {
+                // 批量删除文件
+                const deletePromises = currentConfig.images.map(imgPath => 
+                    fetch(`${API_BASE}/api/delete/file`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filePath: imgPath })
+                    })
+                );
+                await Promise.all(deletePromises);
+                
+                // 更新配置
+                currentConfig.images = [];
+                await saveBaseConfig();
+                renderImagesPreview();
+                showAlert('所有轮播图已清空！');
+            } catch (err) {
+                showAlert(`清空轮播图异常: ${err.message}`, false);
+            }
+        };
+
+        // ===================== 评论用户头像上传（核心新增） =====================
+        const renderUserAvatarPreview = (file) => {
+            const previewEl = document.getElementById('userAvatarPreview');
+            previewEl.innerHTML = '';
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewEl.innerHTML = `<img src="${e.target.result}" alt="用户头像预览">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewEl.innerHTML = '';
+            }
+        };
+
+        const uploadUserAvatar = async (file) => {
+            if (!file) return ''; // 无文件返回空
+            
+            try {
+                const formData = new FormData();
+                formData.append('userAvatar', file);
+                
+                const res = await fetch(`${API_BASE}/api/upload/avatar`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    showAlert('用户头像上传成功！');
+                    return data.data.avatarPath; // 返回头像路径
+                } else {
+                    showAlert(`头像上传失败: ${data.msg}`, false);
+                    return '';
+                }
+            } catch (err) {
+                showAlert(`头像上传异常: ${err.message}`, false);
+                return '';
+            }
+        };
+
+        // ===================== 评论图片上传 =====================
+        const renderReviewImagesPreview = (files) => {
+            const previewEl = document.getElementById('reviewImagesPreview');
+            previewEl.innerHTML = '';
+            
+            if (files && files.length > 0) {
+                Array.from(files).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const previewItem = document.createElement('div');
+                        previewItem.className = 'image-preview'; // 9:16比例
+                        previewItem.innerHTML = `
+                            <img src="${e.target.result}" alt="评论图片${index+1}">
+                            <div class="image-remove" data-index="${index}"><i class="fas fa-times"></i></div>
+                        `;
+                        previewEl.appendChild(previewItem);
+                        previewItem.querySelector('.image-remove').addEventListener('click', (e) => {
+                            const idx = parseInt(e.target.closest('.image-remove').dataset.index);
+                            newReviewImageFiles = newReviewImageFiles.filter((_, i) => i !== idx);
+                            renderReviewImagesPreview(newReviewImageFiles);
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        };
+
+        const uploadReviewImages = async (files) => {
+            if (!files || files.length === 0) return [];
+            
+            try {
+                const formData = new FormData();
+                Array.from(files).forEach(file => formData.append('reviewImages', file));
+                
+                const res = await fetch(`${API_BASE}/api/upload/review-images`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    showAlert(`成功上传${files.length}张评论图片！`);
+                    return data.data.reviewImagePaths;
+                } else {
+                    showAlert(`评论图片上传失败: ${data.msg}`, false);
+                    return [];
+                }
+            } catch (err) {
+                showAlert(`评论图片上传异常: ${err.message}`, false);
+                return [];
+            }
+        };
+
+        // ===================== 评论管理 =====================
+        const fetchAllReviews = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/comments`);
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    currentReviews = data.data;
+                    renderReviewsList();
+                } else {
+                    showAlert(`加载评论失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`加载评论异常: ${err.message}`, false);
+            }
+        };
+
+        const renderReviewsList = () => {
+            const listEl = document.getElementById('reviewsList');
+            listEl.innerHTML = '';
+            
+            if (currentReviews.length === 0) {
+                listEl.innerHTML = '<div class="text-gray-500">暂无评论</div>';
+                return;
+            }
+
+            currentReviews.forEach((review, index) => {
+                // 生成星级
+                const starsHtml = Array(5).fill().map((_, i) => 
+                    `<i class="fas fa-star ${i < review.rating ? '' : 'text-gray-300'}"></i>`
+                ).join('');
+
+                // 评论图片预览
+                const imagesHtml = review.reviewImages?.length 
+                    ? `<div class="preview-container mt-2">${review.reviewImages.map(img => 
+                        `<div class="image-preview"><img src="${API_BASE}/${img}" alt="评论图片"></div>`
+                    ).join('')}</div>` 
+                    : '';
+
+                // 用户头像预览
+                const avatarHtml = review.userAvatar 
+                    ? `<div class="avatar-preview mr-2"><img src="${API_BASE}/${review.userAvatar}" alt="${review.name}"></div>` 
+                    : '';
+
+                // 评论项DOM
+                const reviewItem = document.createElement('div');
+                reviewItem.className = 'review-item';
+                reviewItem.innerHTML = `
+                    <div class="review-header">
+                        <div class="flex items-center">
+                            ${avatarHtml}
+                            <span class="font-medium">${review.name || '访客'}</span>
+                        </div>
+                        <button class="btn btn-danger btn-sm" data-index="${index}">删除</button>
+                    </div>
+                    <div class="review-stars">${starsHtml}</div>
+                    <div class="text-sm text-gray-600 mb-2">${review.time || '未知时间'}</div>
+                    <div class="mb-2">${review.content || ''}</div>
+                    ${imagesHtml}
+                `;
+                listEl.appendChild(reviewItem);
+
+                // 绑定删除事件
+                reviewItem.querySelector('.btn-danger').addEventListener('click', (e) => {
+                    deleteReview(parseInt(e.target.dataset.index));
+                });
+            });
+        };
+
+        const addNewReview = async () => {
+            // 获取表单数据
+            const name = document.getElementById('newReviewName').value.trim();
+            const label = document.getElementById('newReviewLabel').value.trim();
+            const reviewCount = document.getElementById('newReviewCount').value.trim();
+            const photoCount = document.getElementById('newReviewPhotoCount').value.trim();
+            const time = document.getElementById('newReviewTime').value.trim();
+            const content = document.getElementById('newReviewContent').value.trim();
+
+            // 验证必填项
+            if (!name) {
+                showAlert('评论者名称不能为空！', false);
+                return;
+            }
+            if (!content) {
+                showAlert('评论内容不能为空！', false);
+                return;
+            }
+            if (!time) {
+                showAlert('评论时间不能为空！', false);
+                return;
+            }
+
+            try {
+                // 1. 上传用户头像（如有）
+                const userAvatarPath = await uploadUserAvatar(newUserAvatarFile);
+                
+                // 2. 上传评论图片（如有）
+                const reviewImagePaths = await uploadReviewImages(newReviewImageFiles);
+                
+                // 3. 构造评论数据
+                const newReview = {
+                    name,
+                    userAvatar: userAvatarPath, // 新增：用户头像路径
+                    label,
+                    reviewCount,
+                    photoCount,
+                    rating: selectedRating,
+                    time,
+                    content,
+                    reviewImages: reviewImagePaths,
+                    isUserAdd: false,
+                    likeCount: 0,
+                    isLiked: false
+                };
+
+                // 4. 添加评论
+                const res = await fetch(`${API_BASE}/api/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newReview)
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    // 重置表单
+                    document.getElementById('newReviewName').value = '';
+                    document.getElementById('newReviewLabel').value = '';
+                    document.getElementById('newReviewCount').value = '';
+                    document.getElementById('newReviewPhotoCount').value = '';
+                    document.getElementById('newReviewTime').value = '';
+                    document.getElementById('newReviewContent').value = '';
+                    newReviewImageFiles = [];
+                    newUserAvatarFile = null;
+                    renderReviewImagesPreview([]);
+                    renderUserAvatarPreview(null);
+                    // 重置星级
+                    selectedRating = 5;
+                    renderStarRating();
+
+                    // 重新加载评论
+                    await fetchAllReviews();
+                    showAlert('新评论添加成功！');
+                } else {
+                    showAlert(`添加评论失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`添加评论异常: ${err.message}`, false);
+            }
+        };
+
+        const deleteReview = async (index) => {
+            if (index < 0 || index >= currentReviews.length) {
+                showAlert('评论索引无效', false);
+                return;
+            }
+
+            if (!confirm('确定要删除这条评论吗？')) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/comments/${index}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    currentReviews = data.data;
+                    renderReviewsList();
+                    showAlert('评论已删除！');
+                } else {
+                    showAlert(`删除评论失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`删除评论异常: ${err.message}`, false);
+            }
+        };
+
+        // 星级选择
+        const renderStarRating = () => {
+            const stars = document.querySelectorAll('#newReviewRating .star');
+            stars.forEach(star => {
+                const rating = parseInt(star.dataset.rating);
+                star.classList.toggle('active', rating <= selectedRating);
+            });
+        };
+
+        const initStarRating = () => {
+            const stars = document.querySelectorAll('#newReviewRating .star');
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    selectedRating = parseInt(star.dataset.rating);
+                    renderStarRating();
+                });
+            });
+        };
+
+        // ===================== 保存所有配置 =====================
+        const saveAllConfig = async () => {
+            try {
+                // 1. 保存基础配置
+                await saveBaseConfig();
+                
+                // 2. 保存评论（批量更新）
+                const res = await fetch(`${API_BASE}/api/comments`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentReviews)
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    showAlert('所有配置保存成功！');
+                } else {
+                    showAlert(`评论配置保存失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`保存所有配置异常: ${err.message}`, false);
+            }
+        };
+
+        // ===================== 初始化所有事件 =====================
+        const initEvents = () => {
+            // 基础配置
+            document.getElementById('saveBaseConfig').addEventListener('click', saveBaseConfig);
+            
+            // 图标上传
+            document.getElementById('iconUpload').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    uploadIcon(e.target.files[0]);
+                    e.target.value = ''; // 重置文件选择
+                }
+            });
+            document.getElementById('removeIcon').addEventListener('click', removeIcon);
+            
+            // 轮播图上传
+            document.getElementById('imagesUpload').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    uploadImages(e.target.files);
+                    e.target.value = '';
+                }
+            });
+            document.getElementById('clearImages').addEventListener('click', clearAllImages);
+            
+            // 评论用户头像上传
+            document.getElementById('userAvatarUpload').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    newUserAvatarFile = e.target.files[0];
+                    renderUserAvatarPreview(newUserAvatarFile);
+                    e.target.value = '';
+                }
+            });
+            
+            // 评论图片上传
+            document.getElementById('reviewImagesUpload').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    newReviewImageFiles = Array.from(e.target.files);
+                    renderReviewImagesPreview(newReviewImageFiles);
+                    e.target.value = '';
+                }
+            });
+            
+            // 评论管理
+            document.getElementById('addNewReview').addEventListener('click', addNewReview);
+            document.getElementById('saveAllConfig').addEventListener('click', saveAllConfig);
+            
+            // 星级初始化
+            initStarRating();
+        };
+
+        // ===================== 页面加载初始化 =====================
+        window.addEventListener('load', async () => {
+            await fetchRestaurantConfig();
+            await fetchAllReviews();
+            initEvents();
+            renderStarRating(); // 初始化星级显示
+        });
+    </script>
+</body>
+</html>

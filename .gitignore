@@ -1,0 +1,10 @@
+# 依赖目录（无需上传，Render会自动安装）
+node_modules/
+
+# 本地存储的图片和数据（避免上传到仓库，也避免部署后被覆盖）
+uploads/
+data/
+
+# 操作系统临时文件
+.DS_Store
+Thumbs.db

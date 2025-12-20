@@ -1,0 +1,1186 @@
+c<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Reviews - The Wine Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /**
+         * 核心样式修改说明：
+         * 1. 移除商家图标上的"432+"计数文本
+         * 2. 轮播图/评论图片统一设置为9:16比例（aspect-ratio: 9/16）
+         * 3. 自评星星去除飞出动画，仅保留高亮效果
+         * 4. 新增点赞动画样式（弹跳+变色）
+         * 5. 调整自评模块样式，适配位置上移需求
+         */
+        :root {
+            --bg-primary: #121212;       /* 主背景色（深色） */
+            --bg-secondary: #1E1E1E;     /* 次背景色（卡片/输入框） */
+            --text-primary: #E0E0E0;     /* 主文本色 */ 
+            --text-secondary: #AAAAAA;   /* 次文本色（灰色提示） */
+            --accent-blue: #4285F4;      /* Google蓝色（选中态） */
+            --accent-yellow: #FBBC05;    /* Google黄色（星级） */
+            --border-color: #333333;     /* 边框色 */
+            --red-color: #EA4335;        /* Google红色（营业状态） */
+            --like-color: #EA4335;       /* 点赞红色 */
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: Roboto, Arial, sans-serif;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Google Logo样式 */
+        .google-logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .google-logo span:nth-child(1) { color: #4285F4; }
+        .google-logo span:nth-child(2) { color: #EA4335; }
+        .google-logo span:nth-child(3) { color: #FBBC05; }
+        .google-logo span:nth-child(4) { color: #4285F4; }
+        .google-logo span:nth-child(5) { color: #34A853; }
+        .google-logo span:nth-child(6) { color: #EA4335; }
+
+        /* 顶部导航栏 */
+        .header {
+            padding: 12px 16px;
+            background-color: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .login-btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* 搜索栏（可输入） */
+        .search-bar {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            padding-right: 40px;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        .search-clear {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .search-container {
+            position: relative;
+        }
+
+        /* 商家信息区 - 核心修改：移除432+，添加长按跳转样式 */
+        .restaurant-info {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .info-main h1 {
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .rating-container {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .rating-score {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .rating-stars {
+            display: flex;
+            color: var(--accent-yellow);
+            font-size: 16px;
+        }
+        .rating-count {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .restaurant-meta {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-left: 8px;
+        }
+        .status-close {
+            color: var(--red-color);
+        }
+        /* 商家图标 - 移除432+，添加长按交互提示 */
+        .restaurant-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer; /* 提示可交互 */
+            position: relative;
+            touch-action: manipulation; /* 优化移动端触摸 */
+        }
+        .restaurant-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* 彻底移除432+计数 */
+        .avatar-count {
+            display: none !important;
+        }
+
+        /* 标签切换栏 */
+        .tab-bar {
+            display: flex;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-primary);
+            scrollbar-width: none; /* 隐藏滚动条 */
+        }
+        .tab-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .tab-item {
+            padding: 12px 16px;
+            font-size: 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-item.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+            font-weight: 500;
+        }
+
+        /* 标签页内容容器 */
+        .tab-content {
+            display: none;
+            padding: 16px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 筛选区 - 核心修改：删除无用的评分星星 */
+        .filter-section {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .filter-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        /* 彻底移除无用的评分星星 */
+        .user-rating-stars {
+            display: none !important;
+        }
+        .filter-tags, .sort-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .filter-tag, .sort-btn {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .filter-tag.active, .sort-btn.active {
+            background-color: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        /* 评论列表 */
+        .review-list {
+            padding: 16px;
+        }
+        .review-item {
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+        .review-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        /* 评论用户头像样式 - 适配后台上传功能 */
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .user-info {
+            flex: 1;
+        }
+        .user-name {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+        .user-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+        .review-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .review-rating {
+            display: flex;
+            color: var(--accent-yellow);
+            margin-bottom: 8px;
+        }
+        .review-content {
+            font-size: 16px;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        /* 轮播图 - 核心修改：9:16比例 */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9; /* 强制16/9比例 */
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .carousel-slide.active {
+            opacity: 1;
+        }
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .carousel-dots {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+        }
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.5);
+            cursor: pointer;
+        }
+        .carousel-dot.active {
+            background-color: white;
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .carousel-prev {
+            left: 8px;
+        }
+        .carousel-next {
+            right: 8px;
+        }
+
+        /* 评论图片 - 核心修改：16/9比例 */
+        .review-images {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .review-images img {
+            width: 100%;
+            aspect-ratio: 16/9; /* 强制16/9比例 */
+            object-fit: cover;
+        }
+
+        /* 照片页样式 - 核心修改：16/9比例 */
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .photo-item {
+            aspect-ratio: 16/9; /* 强制16/9比例 */
+            overflow: hidden;
+        }
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 简介页样式 */
+        .intro-content {
+            line-height: 1.8;
+            font-size: 16px;
+            color: var(--text-primary);
+            white-space: pre-line;
+        }
+
+        /* 用户自评模块 - 核心修改：移到筛选区上方，星星无飞出动画 */
+        .user-review-form {
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .submit-btn {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        /* 自评星星 - 核心修改：无飞出动画，仅高亮效果 */
+        .review-rating-stars {
+            display: flex;
+            gap: 4px;
+            font-size: 24px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        .review-rating-stars .star {
+            cursor: pointer;
+            transition: color 0.2s ease; /* 仅颜色过渡，无位移/旋转 */
+        }
+        .review-rating-stars .star.active {
+            color: var(--accent-yellow);
+        }
+
+        /* 点赞动画样式 - 新增：弹跳+变色 */
+        .review-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .like-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .like-btn.liked {
+            color: var(--like-color);
+            animation: likeBounce 0.5s ease; /* 点赞弹跳动画 */
+        }
+        @keyframes likeBounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-secondary);
+        }
+
+        /* 星星飞走动画 - 新增fill-mode: forwards，动画结束后保持最后一帧 */
+        .star.fly-away {
+            animation: starFly 0.8s ease-out forwards; /* 新增forwards */
+        }
+        @keyframes starFly {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(300px, -300px) rotate(720deg) scale(3);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(500px, -500px) rotate(1440deg) scale(6);
+                opacity: 0; /* 最后一帧透明/位移，且不恢复 */
+            }
+        }
+        /* 加固星级样式优先级，避免被其他样式覆盖 */
+        .review-rating .star {
+            color: var(--text-secondary) !important;
+        }
+        .review-rating .star.text-accent-yellow {
+            color: var(--accent-yellow) !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="google-logo">
+            <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+        </div>
+        <button class="login-btn">登录</button>
+    </header>
+
+    <!-- 搜索栏（可输入） -->
+    <div class="search-bar">
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="搜索商家、地址或关键词..." value="the wine shop reviews">
+            <i class="fas fa-times search-clear"></i>
+        </div>
+    </div>
+
+    <!-- 商家信息区 -->
+    <div class="restaurant-info" id="restaurantInfo">
+        <!-- 由JS动态渲染 -->
+    </div>
+
+    <!-- 标签切换栏（4个标签：概览、照片、简介、评价） -->
+    <div class="tab-bar">
+        <div class="tab-item active" data-tab="overview">概览</div>
+        <div class="tab-item" data-tab="photos">照片</div>
+        <div class="tab-item" data-tab="intro">简介</div>
+        <div class="tab-item" data-tab="reviews">评价</div>
+    </div>
+
+    <!-- 概览页内容（轮播图+图标+简介） -->
+    <div class="tab-content active" id="overviewTab">
+        <!-- 轮播图 -->
+        <div class="carousel-container" id="carouselContainer">
+            <div class="loading">加载轮播图中...</div>
+        </div>
+        <!-- 商家简介（概览页简略版） -->
+        <div class="intro-content" id="overviewIntro">
+            加载简介中...
+        </div>
+    </div>
+
+    <!-- 照片页内容（列出所有轮播图） -->
+    <div class="tab-content" id="photosTab">
+        <div class="photos-grid" id="photosGrid">
+            <div class="loading">加载照片中...</div>
+        </div>
+    </div>
+
+    <!-- 简介页内容（完整简介） -->
+    <div class="tab-content" id="introTab">
+        <div class="intro-content" id="fullIntro">
+            加载简介中...
+        </div>
+    </div>
+
+    <!-- 评价页内容 - 核心修改：
+         1. 发表评价模块移到筛选区上方
+         2. 删除无用的评分星星
+         3. 自评星星无飞出动画
+    -->
+    <div class="tab-content" id="reviewsTab">
+        <!-- 发表评价模块（核心修改：移到筛选区最上方） -->
+        <div class="user-review-form">
+            <h3 class="filter-title mb-4">发表你的评价</h3>
+            <div class="form-group">
+                <label class="form-label">你的名称</label>
+                <input type="text" class="form-input" id="userReviewName" placeholder="输入你的名称" value="访客">
+            </div>
+            <div class="form-group">
+                <label class="form-label">评分</label>
+                <!-- 自评星星 - 无飞出动画，仅高亮 -->
+                <div class="review-rating-stars" id="userReviewRating">
+                    <i class="fas fa-star star active" data-rating="1"></i>
+                    <i class="fas fa-star star active" data-rating="2"></i>
+                    <i class="fas fa-star star active" data-rating="3"></i>
+                    <i class="fas fa-star star active" data-rating="4"></i>
+                    <i class="fas fa-star star active" data-rating="5"></i>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">评论内容</label>
+                <textarea class="form-textarea" id="userReviewContent" placeholder="分享你的体验..."></textarea>
+            </div>
+            <button class="submit-btn" id="submitUserReview">提交评价</button>
+        </div>
+
+        <!-- 筛选区 - 核心修改：删除无用的评分星星 -->
+        <div class="filter-section">
+            <div>
+                <h3 class="filter-title">评价</h3>
+                <!-- 只保留全部标签 -->
+                <div class="filter-tags">
+                    <div class="filter-tag active">全部</div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="filter-title">排序依据</h3>
+                <!-- 去除相关度最高，保留其余三个 -->
+                <div class="sort-btns">
+                    <div class="sort-btn active" data-sort="time/newest">从新到旧</div>
+                    <div class="sort-btn" data-sort="rating/desc">评分由高到低</div>
+                    <div class="sort-btn" data-sort="rating/asc">评分由低到高</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 评论列表 -->
+        <div class="review-list" id="reviewList">
+            <div class="loading">加载评论中...</div>
+        </div>
+    </div>
+    <script>
+        /**
+         * 前端核心逻辑修改说明：
+         * 1. 商家图标长按（1秒）跳转真实评论页面（PC端右键/双击兼容）
+         * 2. 自评星星仅高亮无飞出动画，支持正确打分
+         * 3. 评论点赞动画（本地维护状态，不提交后台）
+         * 4. 轮播图/评论图片强制9:16比例
+         * 5. 支持后台上传的评论用户头像前端显示
+         * 6. 自评模块位置调整到评价筛选区上方
+         */
+        const API_BASE = ''; // 本地运行留空，部署时填写服务器地址
+        let restaurantConfig = {}; // 商家配置（含真实跳转地址）
+        let allReviews = []; // 所有评论数据
+        let selectedRating = 5; // 用户自评默认评分（5星）
+        let currentCarouselIndex = 0; // 轮播图当前索引
+        let carouselInterval = null; // 轮播图自动播放定时器
+        let longPressTimer = null; // 长按跳转定时器（1秒触发）
+
+        // ===================== 工具函数 =====================
+        /**
+         * 显示临时提示框
+         * @param {string} msg 提示信息
+         * @param {boolean} isSuccess 是否为成功提示
+         */
+        const showAlert = (msg, isSuccess = true) => {
+            const alertEl = document.createElement('div');
+            alertEl.style.position = 'fixed';
+            alertEl.style.top = '20px';
+            alertEl.style.left = '50%';
+            alertEl.style.transform = 'translateX(-50%)';
+            alertEl.style.padding = '12px 16px';
+            alertEl.style.borderRadius = '6px';
+            alertEl.style.backgroundColor = isSuccess ? '#E6F4EA' : '#FEF0F0';
+            alertEl.style.color = isSuccess ? '#1F7536' : '#B91C1C';
+            alertEl.style.zIndex = '9999';
+            alertEl.style.fontSize = '14px';
+            alertEl.textContent = msg;
+            document.body.appendChild(alertEl);
+            setTimeout(() => document.body.removeChild(alertEl), 3000);
+        };
+
+        /**
+         * 安全解析API响应
+         * @param {Response} response 响应对象
+         * @returns {object} 解析后的JSON数据
+         */
+        const safeParseResponse = async (response) => {
+            try {
+                return await response.json();
+            } catch (err) {
+                return { code: 500, msg: '服务器响应格式错误' };
+            }
+        };
+        // 全局状态：存储已触发飞出动画的星星唯一ID（持久化，DOM重渲染不丢失）
+        const animatedStarIds = new Set(); // Set结构，避免重复存储
+
+        // ===================== 核心功能1：商家图标长按跳转 =====================
+        const initLongPressJump = () => {
+            const avatarEl = document.querySelector('.restaurant-avatar');
+            if (!avatarEl || !restaurantConfig.realUrl) return;
+
+            // 移动端触摸事件 - 长按1秒触发跳转
+            avatarEl.addEventListener('touchstart', () => {
+                longPressTimer = setTimeout(() => {
+                    window.open(restaurantConfig.realUrl, '_blank');
+                    showAlert('已跳转到真实评论页面！');
+                }, 1000); // 长按1秒触发
+            });
+
+            // 触摸结束/移动/取消 - 清除定时器
+            ['touchend', 'touchmove', 'touchcancel'].forEach(event => {
+                avatarEl.addEventListener(event, () => {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                });
+            });
+
+            // PC端兼容 - 右键/双击跳转
+            avatarEl.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                window.open(restaurantConfig.realUrl, '_blank');
+                showAlert('已跳转到真实评论页面！');
+            });
+            avatarEl.addEventListener('dblclick', () => {
+                window.open(restaurantConfig.realUrl, '_blank');
+                showAlert('已跳转到真实评论页面！');
+            });
+        };
+
+        // ===================== 核心功能2：自评星星（无飞出动画） =====================
+        const initReviewRating = () => {
+            const stars = document.querySelectorAll('#userReviewRating .star');
+            // 初始化强制渲染5星实心，修复初次加载样式错误
+            stars.forEach(star => {
+                const sRating = parseInt(star.dataset.rating) || 0;
+                star.classList.toggle('active', sRating <= selectedRating);
+            });
+            
+            // 点击事件逻辑保留
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    // 记录选中的评分
+                    selectedRating = parseInt(star.dataset.rating);
+                    // 仅高亮选中及之前的星星，无飞出动画
+                    stars.forEach(s => {
+                        const sRating = parseInt(s.dataset.rating) || 0;
+                        s.classList.toggle('active', sRating <= selectedRating);
+                    });
+                });
+            });
+        };
+        // ===================== 评论区星星动画核心逻辑（全局状态控制） =====================
+        const initReviewStarAnimation = (reviewItem, reviewIndex) => {
+            const reviewStars = reviewItem.querySelectorAll('.review-rating .star');
+            reviewStars.forEach((star, starIndex) => {
+                // 生成永久唯一的星星ID（不受DOM重渲染影响）
+                const starId = `star_${reviewIndex}_${starIndex}`;
+                star.dataset.starId = starId; // 绑定到DOM，方便匹配
+
+                // 核心判断：如果该星星已触发过动画，直接应用最终状态，不绑定事件
+                if (animatedStarIds.has(starId)) {
+                    star.classList.add('fly-away'); // 保持飞走后的状态
+                    return; // 跳过事件绑定
+                }
+
+                // 未触发过动画的星星，绑定单次点击事件
+                const handleStarClick = () => {
+                    // 1. 标记到全局状态（永久记录，切页不丢失）
+                    animatedStarIds.add(starId);
+                    // 2. 触发动画
+                    star.classList.add('fly-away');
+                    // 3. 彻底移除事件监听器，防止重复触发
+                    star.removeEventListener('click', handleStarClick);
+                };
+
+                star.addEventListener('click', handleStarClick);
+            });
+        };
+        // ===================== 核心功能3：评论点赞动画（移除计数，仅切换样式） =====================
+        const bindLikeEvents = () => {
+            const likeBtns = document.querySelectorAll('.like-btn');
+            likeBtns.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const index = parseInt(btn.dataset.index);
+                    const review = allReviews[index];
+                    if (!review) return;
+
+                    // 仅切换点赞样式，移除计数相关逻辑
+                    review.isLiked = !review.isLiked;
+                    btn.classList.toggle('liked', review.isLiked);
+                    btn.innerHTML = `<i class="${review.isLiked ? 'fas' : 'far'} fa-heart"></i>`;
+                });
+            });
+        };
+        // ===================== 标签页切换（仅处理未触发动画的星星） =====================
+        const initTabSwitch = () => {
+            const tabItems = document.querySelectorAll('.tab-item');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // 仅重置「未触发动画」的星星样式（已触发的完全不动）
+                    document.querySelectorAll('.review-rating .star').forEach(star => {
+                        const starId = star.dataset.starId;
+                        if (starId && !animatedStarIds.has(starId)) {
+                            star.classList.remove('fly-away');
+                        }
+                    });
+                    
+                    // 原有标签切换逻辑（保留）
+                    tabItems.forEach(t => t.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    const tabId = item.dataset.tab;
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${tabId}Tab`) {
+                            content.classList.add('active');
+                        }
+                    });
+                    
+                    if (tabId === 'overview') startCarousel();
+                    else stopCarousel();
+                });
+            });
+        };
+        // ===================== 轮播图功能（9:16比例） =====================
+        const renderCarousel = () => {
+            const container = document.getElementById('carouselContainer');
+            if (!restaurantConfig.images || restaurantConfig.images.length === 0) {
+                container.innerHTML = '<div class="loading">暂无轮播图</div>';
+                return;
+            }
+
+            // 生成轮播幻灯片（9:16比例）
+            const slidesHtml = restaurantConfig.images.map((imgPath, index) => `
+                <div class="carousel-slide ${index === 0 ? 'active' : ''}">
+                    <img src="${imgPath.startsWith('http') ? imgPath : API_BASE + '/' + imgPath}" alt="轮播图${index+1}">
+                </div>
+            `).join('');
+
+            // 生成轮播点
+            const dotsHtml = restaurantConfig.images.map((_, index) => `
+                <div class="carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+            `).join('');
+
+            // 渲染轮播图
+            container.innerHTML = `
+                ${slidesHtml}
+                <button class="carousel-btn carousel-prev"><i class="fas fa-chevron-left"></i></button>
+                <button class="carousel-btn carousel-next"><i class="fas fa-chevron-right"></i></button>
+                <div class="carousel-dots">${dotsHtml}</div>
+            `;
+
+            // 绑定轮播事件
+            bindCarouselEvents();
+            startCarousel();
+        };
+
+        const bindCarouselEvents = () => {
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.carousel-dot');
+            const prevBtn = document.querySelector('.carousel-prev');
+            const nextBtn = document.querySelector('.carousel-next');
+
+            // 轮播点点击
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    currentCarouselIndex = parseInt(dot.dataset.index);
+                    updateCarousel();
+                });
+            });
+
+            // 上一张/下一张
+            prevBtn.addEventListener('click', () => {
+                currentCarouselIndex = (currentCarouselIndex - 1 + slides.length) % slides.length;
+                updateCarousel();
+            });
+            nextBtn.addEventListener('click', () => {
+                currentCarouselIndex = (currentCarouselIndex + 1) % slides.length;
+                updateCarousel();
+            });
+        };
+
+        const updateCarousel = () => {
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('.carousel-dot');
+
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentCarouselIndex) slide.classList.add('active');
+            });
+
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active');
+                if (index === currentCarouselIndex) dot.classList.add('active');
+            });
+        };
+
+        const startCarousel = () => {
+            stopCarousel();
+            carouselInterval = setInterval(() => {
+                const slides = document.querySelectorAll('.carousel-slide');
+                if (slides.length === 0) return;
+                currentCarouselIndex = (currentCarouselIndex + 1) % slides.length;
+                updateCarousel();
+            }, 3000);
+        };
+
+        const stopCarousel = () => {
+            if (carouselInterval) clearInterval(carouselInterval);
+            carouselInterval = null;
+        };
+
+        // ===================== 照片页（9:16比例） =====================
+        const renderPhotosGrid = () => {
+            const grid = document.getElementById('photosGrid');
+            if (!restaurantConfig.images || restaurantConfig.images.length === 0) {
+                grid.innerHTML = '<div class="loading">暂无照片</div>';
+                return;
+            }
+
+            // 生成9:16比例的照片网格
+            const photosHtml = restaurantConfig.images.map(imgPath => `
+                <div class="photo-item">
+                    <img src="${imgPath.startsWith('http') ? imgPath : API_BASE + '/' + imgPath}" alt="商家照片">
+                </div>
+            `).join('');
+
+            grid.innerHTML = photosHtml;
+        };
+
+        // ===================== 简介页 =====================
+        const renderIntro = () => {
+            const introText = restaurantConfig.intro || '暂无简介';
+            // 概览页简略版（前100字）
+            document.getElementById('overviewIntro').textContent = 
+                introText.length > 100 ? introText.substring(0, 100) + '...' : introText;
+            // 简介页完整版
+            document.getElementById('fullIntro').textContent = introText;
+        };
+
+        // ===================== 商家信息加载 =====================
+        const fetchRestaurantInfo = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/restaurant`);
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    restaurantConfig = data.data;
+                    renderRestaurantInfo();
+                    renderCarousel();
+                    renderPhotosGrid();
+                    renderIntro();
+                    initLongPressJump(); // 初始化长按跳转
+                    
+                    // 新增：动态设置搜索栏内容为「商家实际名称+review」
+                    const searchInput = document.querySelector('.search-input');
+                    searchInput.value = `${restaurantConfig.name || '店名'}review`;
+                }
+            } catch (err) {
+                console.error('加载商家信息失败:', err);
+                document.getElementById('restaurantInfo').innerHTML = '<div class="loading">加载商家信息失败</div>';
+            }
+        };
+
+        const renderRestaurantInfo = () => {
+            const infoEl = document.getElementById('restaurantInfo');
+            // 生成星级
+            const ratingStars = Array(5).fill().map((_, i) => {
+                const fullStar = Math.floor(restaurantConfig.rating);
+                const halfStar = restaurantConfig.rating % 1 >= 0.5;
+                if (i < fullStar) return '<i class="fas fa-star"></i>';
+                else if (i === fullStar && halfStar) return '<i class="fas fa-star-half-alt"></i>';
+                else return '<i class="far fa-star"></i>';
+            }).join('');
+
+            // 商家图标
+            const avatarSrc = restaurantConfig.icon 
+                ? `${API_BASE}/${restaurantConfig.icon}` 
+                : 'https://via.placeholder.com/80/333333/ffffff?text=Shop';
+
+            // 渲染商家信息
+            infoEl.innerHTML = `
+                <div class="info-header">
+                    <div class="info-main">
+                        <h1>${restaurantConfig.name || 'The Wine Shop'}</h1>
+                        <div class="rating-container">
+                            <span class="rating-score">${restaurantConfig.rating || 4.6}</span>
+                            <div class="rating-stars">${ratingStars}</div>
+                            <span class="rating-count">(255)</span>
+                            <span class="restaurant-meta">${restaurantConfig.type || '酒行'} · <span class="status-close">${restaurantConfig.status || '已打烊'}</span></span>
+                        </div>
+                    </div>
+                    <div class="restaurant-avatar">
+                        <img src="${avatarSrc}" alt="${restaurantConfig.name}">
+                        <!-- 彻底移除432+计数 -->
+                    </div>
+                </div>
+            `;
+        };
+
+        // ===================== 评论功能 =====================
+        const fetchAllReviews = async (sortType = 'time/newest') => {
+            try {
+                const res = await fetch(`${API_BASE}/api/comments?sort=${sortType}`);
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    allReviews = data.data;
+                    renderReviewsList();
+                    bindLikeEvents(); // 绑定点赞事件
+                }
+            } catch (err) {
+                console.error('加载评论失败:', err);
+                document.getElementById('reviewList').innerHTML = '<div class="loading">加载评论失败</div>';
+            }
+        };
+
+        const renderReviewsList = () => {
+            const listEl = document.getElementById('reviewList');
+            if (allReviews.length === 0) {
+                listEl.innerHTML = '<div class="loading">暂无评论</div>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+            allReviews.forEach((review, index) => {
+                // 评论星级（彻底修复：双重保障，样式类+内联样式，确保星级正确显示）
+                const ratingStars = Array(5).fill().map((_, i) => {
+                    // 强制转换为数字，处理浮点数（如4.5取整为4）
+                    const actualRating = Math.floor(Number(review.rating) || 0);
+                    // 明确区分选中/未选中样式，增加内联样式兜底，避免样式覆盖
+                    const starClass = i < actualRating 
+                        ? 'text-accent-yellow'  // 选中的星级（黄色）
+                        : 'text-text-secondary opacity-50'; // 未选中的星级（灰色半透明）
+                    return `<i class="fas fa-star star ${starClass}" style="color: ${i < actualRating ? 'var(--accent-yellow)' : 'var(--text-secondary)'}"></i>`;
+                }).join('');
+                // 评论图片（9:16比例）
+                const reviewImages = review.reviewImages?.length 
+                    ? `<div class="review-images">${review.reviewImages.map(img => 
+                        `<img src="${img.startsWith('http') ? img : API_BASE + '/' + img}" alt="评论图片">`
+                    ).join('')}</div>`
+                    : '';
+
+                // 评论用户头像（修复：处理头像路径+谷歌默认头像兜底）
+                const defaultAvatar = `https://ssl.gstatic.com/ui/v1/icons/mail/profile_mask.png`; // 谷歌官方默认头像
+                // 1. 校验头像路径有效性 2. 拼接正确的API路径 3. 无头像时使用谷歌默认
+                const userAvatarSrc = (review.userAvatar && review.userAvatar.trim()) 
+                    ? `${API_BASE}/${review.userAvatar.trim()}`  // 确保路径拼接正确，去除空格
+                    : defaultAvatar;
+
+                // 点赞按钮 - 移除计数，仅保留心形图标
+                const likeBtnHtml = `
+                    <div class="like-btn ${review.isLiked ? 'liked' : ''}" data-index="${index}">
+                        <i class="${review.isLiked ? 'fas' : 'far'} fa-heart"></i>
+                    </div>
+                `;
+
+
+                // 渲染评论项 - 替换原有星星事件绑定逻辑，调用全局状态控制的初始化函数
+                const reviewItem = document.createElement('div');
+                reviewItem.className = 'review-item';
+                reviewItem.innerHTML = `
+                    <div class="review-header">
+                        <div class="user-avatar">
+                            <img src="${userAvatarSrc}" alt="${review.name}">
+                        </div>
+                        <div class="user-info">
+                            <div class="flex justify-between">
+                                <div>
+                                    <div class="user-name">${review.name || '访客'}</div>
+                                    ${review.label ? `<div class="user-meta">${review.label}</div>` : ''}
+                                    ${review.reviewCount ? `<div class="user-meta">${review.reviewCount} · ${review.photoCount || '0张照片'}</div>` : ''}
+                                </div>
+                                <div class="review-time">${review.time || '未知时间'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-rating">${ratingStars}</div>
+                    <div class="review-content">${review.content || ''}</div>
+                    ${reviewImages}
+                    <div class="review-action">
+                        ${likeBtnHtml}
+                    </div>
+                `;
+                listEl.appendChild(reviewItem);
+
+                // 调用全局状态控制的星星动画初始化（替换原有星星事件绑定）
+                initReviewStarAnimation(reviewItem, index);
+
+                // 评论区星星绑定飞出动画（修复：命名函数+精准防重复，恢复星星飞出）
+                const reviewStars = reviewItem.querySelectorAll('.review-rating .star');
+                reviewStars.forEach((star, starIndex) => {
+                    // 给每个星星添加唯一标识，标记动画状态
+                    const starUniqueId = `review-${index}-star-${starIndex}`;
+                    star.id = starUniqueId;
+                    
+                    // 仅当星星未触发过动画时，才绑定点击事件
+                    if (star.dataset.hasAnimated !== 'true') {
+                        // 命名事件函数，避免arguments.callee兼容性问题
+                        const starClickHandler = () => {
+                            // 标记星星已触发动画，后续不再响应
+                            star.dataset.hasAnimated = 'true';
+                            // 触发飞出动画
+                            star.classList.add('fly-away');
+                            // 移除事件监听器（防重复点击触发）
+                            star.removeEventListener('click', starClickHandler);
+                        };
+                        
+                        // 绑定点击事件（仅绑定一次）
+                        star.addEventListener('click', starClickHandler);
+                    } else {
+                        // 已触发过动画的星星，直接保留最终状态（透明/位移）
+                        star.classList.add('fly-away');
+                    }
+                });
+            });
+        };
+
+        // 提交用户自评
+        const submitUserReview = async () => {
+            const userName = document.getElementById('userReviewName').value.trim() || '访客';
+            const userContent = document.getElementById('userReviewContent').value.trim();
+            
+            if (!userContent) {
+                showAlert('评论内容不能为空！', false);
+                return;
+            }
+
+            try {
+                const newReview = {
+                    name: userName,
+                    rating: selectedRating,
+                    content: userContent,
+                    time: '刚刚',
+                    isUserAdd: true,
+                    userAvatar: '', // 自评默认无头像
+                    // 移除likeCount和isLiked初始化，避免冗余数据
+                };
+                const res = await fetch(`${API_BASE}/api/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newReview)
+                });
+
+                const data = await safeParseResponse(res);
+                if (data.code === 200) {
+                    // 重置表单
+                    document.getElementById('userReviewName').value = '访客';
+                    document.getElementById('userReviewContent').value = '';
+                    const stars = document.getElementById('userReviewRating').querySelectorAll('.star');
+                    stars.forEach(s => s.classList.remove('active'));
+                    stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.rating) <= 5));
+                    selectedRating = 5;
+
+                    // 重新加载评论
+                    fetchAllReviews('time/newest');
+                    showAlert('评价提交成功！');
+                } else {
+                    showAlert(`提交失败: ${data.msg}`, false);
+                }
+            } catch (err) {
+                showAlert(`提交异常: ${err.message}`, false);
+            }
+        };
+
+        // 绑定评论排序
+        const bindSortEvents = () => {
+            const sortBtns = document.querySelectorAll('.sort-btn');
+            sortBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sortBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    fetchAllReviews(btn.dataset.sort);
+                });
+            });
+        };
+
+        // ===================== 初始化 =====================
+        window.addEventListener('load', () => {
+            // 加载基础数据
+            fetchRestaurantInfo();
+            fetchAllReviews('time/newest');
+
+            // 初始化功能
+            initTabSwitch();
+            initReviewRating();
+            bindSortEvents();
+
+            // 绑定自评提交按钮
+            document.getElementById('submitUserReview').addEventListener('click', submitUserReview);
+
+            // 搜索框清除按钮
+            document.querySelector('.search-clear').addEventListener('click', () => {
+                document.querySelector('.search-input').value = '';
+            });
+        });
+
+        // 页面卸载时清除定时器
+        window.addEventListener('beforeunload', () => {
+            stopCarousel();
+            clearTimeout(longPressTimer);
+        });
+    </script>
+</body>
+</html>
