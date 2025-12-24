@@ -41,9 +41,9 @@ const createDirIfNotExist = (dirPath) => {
         try {
             // recursive: 递归创建多级目录，mode: 设置目录权限
             fs.mkdirSync(dirPath, { recursive: true, mode: 0o755 });
-            console.log(`✅ 目录创建成功: ${dirPath}`);
+            console.log(`✅ Directory created successfully: ${dirPath}`);
         } catch (err) {
-            console.error(`❌ 创建目录失败 ${dirPath}:`, err.message);
+            console.error(`❌ Failed to create directory ${dirPath}:`, err.message);
             throw err; // 抛出错误让上层处理
         }
     }
@@ -83,7 +83,7 @@ const storage = multer.diskStorage({
         } else if (file.fieldname === 'userAvatar') { // 评论用户头像字段
             cb(null, userAvatarsDir);
         } else {
-            cb(new Error(`❌ 不支持的文件类型: ${file.fieldname}`), null);
+            cb(new Error(`❌ Unsupported file type: ${file.fieldname}`), null);
         }
     },
     filename: (req, file, cb) => {
@@ -170,10 +170,10 @@ const deleteFileIfExist = (filePath) => {
         const fullPath = path.resolve(__dirname, filePath); // 转换为绝对路径
         if (fs.existsSync(fullPath)) {
             fs.unlinkSync(fullPath); // 删除文件
-            console.log(`✅ 文件已删除: ${fullPath}`);
+            console.log(`✅ File deleted: ${fullPath}`);
             return true;
         }
-        console.log(`⚠️ 文件不存在: ${fullPath}`);
+        console.log(`⚠️ File does not exist: ${fullPath}`);
         return false;
     } catch (err) {
         console.error(`❌ 删除文件失败:`, err.message);
@@ -198,7 +198,7 @@ const initDataFiles = () => {
             images: []
         };
         writeJsonFile(RESTAURANT_FILE, defaultConfig);
-        console.log('✅ 默认餐厅配置已创建（适配Google评论样式+新增简介）');
+        console.log('✅ Default restaurant configuration created (adapted for Google reviews style + new introduction)');
     }
 
     // 初始化评论文件（含用户头像字段）
@@ -241,7 +241,7 @@ const initDataFiles = () => {
             }
         ];
         writeJsonFile(COMMENTS_FILE, defaultComments);
-        console.log('✅ 默认评论文件已创建（支持用户头像+点赞）');
+        console.log('✅ Default comments file created (supports user avatars + likes)');
     }
 };
 
@@ -268,7 +268,7 @@ app.post('/api/restaurant', (req, res) => {
     if (!newConfig) {
         return res.json({
             code: 400,
-            msg: '配置数据不能为空'
+            msg: 'Configuration data cannot be empty'
         });
     }
 
@@ -287,9 +287,9 @@ app.post('/api/restaurant', (req, res) => {
         addr: newConfig.addr || 'Bruckenstr. 35, 60364 Frankfurt am Main',
         phone: newConfig.phone || '+089 661 2744',
         realUrl: newConfig.realUrl || 'https://maps.google.com/', // 真实评论页面地址
-        type: newConfig.type || '酒行', 
-        status: newConfig.status || '已打烊', 
-        intro: newConfig.intro || '暂无简介', 
+        type: newConfig.type || 'Wine Shop', 
+        status: newConfig.status || 'Closed', 
+        intro: newConfig.intro || 'No introduction available', 
         icon: newConfig.icon || '',
         images: Array.isArray(newConfig.images) ? newConfig.images : []
     };
@@ -299,13 +299,13 @@ app.post('/api/restaurant', (req, res) => {
     if (isSuccess) {
         res.json({
             code: 200,
-            msg: '配置保存成功',
+            msg: 'Configuration saved successfully',
             data: finalConfig
         });
     } else {
         res.json({
             code: 500,
-            msg: '配置保存失败，请检查服务器权限'
+            msg: 'Configuration save failed, please check server permissions'
         });
     }
 });
@@ -366,7 +366,7 @@ app.put('/api/comments', (req, res) => {
     if (!Array.isArray(newComments)) {
         return res.json({
             code: 400,
-            msg: '评论数据必须是数组'
+            msg: 'Comments data must be an array'
         });
     }
 
@@ -374,13 +374,13 @@ app.put('/api/comments', (req, res) => {
     if (isSuccess) {
         res.json({
             code: 200,
-            msg: '评论更新成功',
+            msg: 'Comments updated successfully',
             data: newComments
         });
     } else {
         res.json({
             code: 500,
-            msg: '评论更新失败'
+            msg: 'Comments update failed'
         });
     }
 });
@@ -395,20 +395,20 @@ app.post('/api/comments', (req, res) => {
     if (!newComment || !newComment.content || !newComment.rating) {
         return res.json({
             code: 400,
-            msg: '评论内容和评分不能为空'
+            msg: 'Comment content and rating cannot be empty'
         });
     }
 
     const comments = readJsonFile(COMMENTS_FILE) || [];
     // 构造评论数据（补全扩展字段）
     const commentToAdd = {
-        name: newComment.name || '访客',
+        name: newComment.name || 'Guest',
         userAvatar: newComment.userAvatar || '', // 评论用户头像
         label: newComment.label || '', 
-        reviewCount: newComment.reviewCount || '0条评价',
-        photoCount: newComment.photoCount || '0张照片',
+        reviewCount: newComment.reviewCount || '0 reviews',
+        photoCount: newComment.photoCount || '0 photos',
         rating: parseInt(newComment.rating) || 5,
-        time: newComment.time || '刚刚', 
+        time: newComment.time || 'Just now', 
         content: newComment.content,
         reviewImages: Array.isArray(newComment.reviewImages) ? newComment.reviewImages : [],
         isUserAdd: newComment.isUserAdd || true,
@@ -421,13 +421,13 @@ app.post('/api/comments', (req, res) => {
     if (isSuccess) {
         res.json({
             code: 200,
-            msg: '评论添加成功',
+            msg: 'Comment added successfully',
             data: commentToAdd
         });
     } else {
         res.json({
             code: 500,
-            msg: '评论保存失败'
+            msg: 'Comment save failed'
         });
     }
 });
@@ -444,7 +444,7 @@ app.delete('/api/comments/:index', (req, res) => {
     if (index < 0 || index >= comments.length) {
         return res.json({
             code: 400,
-            msg: '评论索引无效'
+            msg: 'Invalid comment index'
         });
     }
 
@@ -466,13 +466,13 @@ app.delete('/api/comments/:index', (req, res) => {
     if (isSuccess) {
         res.json({
             code: 200,
-            msg: '评论删除成功',
+            msg: 'Comment deleted successfully',
             data: comments
         });
     } else {
         res.json({
             code: 500,
-            msg: '评论删除失败'
+            msg: 'Comment deletion failed'
         });
     }
 });
@@ -486,7 +486,7 @@ app.post('/api/upload/icon', upload.single('icon'), (req, res) => {
         if (!req.file) {
             return res.json({
                 code: 400,
-                msg: '请选择要上传的图标文件'
+                msg: 'Please select an icon file to upload'
             });
         }
 
@@ -495,14 +495,14 @@ app.post('/api/upload/icon', upload.single('icon'), (req, res) => {
         
         res.json({
             code: 200,
-            msg: '图标上传成功',
+            msg: 'Icon uploaded successfully',
             data: { iconPath }
         });
     } catch (err) {
-        console.error('❌ 图标上传错误:', err);
+        console.error('❌ Icon upload error:', err);
         res.json({
             code: 500,
-            msg: `图标上传失败: ${err.message}`
+            msg: `Icon upload failed: ${err.message}`
         });
     }
 });
@@ -516,7 +516,7 @@ app.post('/api/upload/images', upload.array('images', 10), (req, res) => {
         if (!req.files || req.files.length === 0) {
             return res.json({
                 code: 400,
-                msg: '请选择要上传的图片文件'
+                msg: 'Please select image files to upload'
             });
         }
 
@@ -527,14 +527,14 @@ app.post('/api/upload/images', upload.array('images', 10), (req, res) => {
 
         res.json({
             code: 200,
-            msg: `成功上传 ${req.files.length} 张图片`,
+            msg: `Successfully uploaded ${req.files.length} images`,
             data: { imagePaths }
         });
     } catch (err) {
-        console.error('❌ 图片上传错误:', err);
+        console.error('❌ Image upload error:', err);
         res.json({
             code: 500,
-            msg: `图片上传失败: ${err.message}`
+            msg: `Image upload failed: ${err.message}`
         });
     }
 });
@@ -548,7 +548,7 @@ app.post('/api/upload/avatar', upload.single('userAvatar'), (req, res) => {
         if (!req.file) {
             return res.json({
                 code: 400,
-                msg: '请选择要上传的头像文件'
+                msg: 'Please select an avatar file to upload'
             });
         }
 
@@ -557,14 +557,14 @@ app.post('/api/upload/avatar', upload.single('userAvatar'), (req, res) => {
         
         res.json({
             code: 200,
-            msg: '头像上传成功',
+            msg: 'Avatar uploaded successfully',
             data: { avatarPath }
         });
     } catch (err) {
-        console.error('❌ 头像上传错误:', err);
+        console.error('❌ Avatar upload error:', err);
         res.json({
             code: 500,
-            msg: `头像上传失败: ${err.message}`
+            msg: `Avatar upload failed: ${err.message}`
         });
     }
 });
@@ -578,7 +578,7 @@ app.post('/api/upload/review-images', upload.array('reviewImages', 10), (req, re
         if (!req.files || req.files.length === 0) {
             return res.json({
                 code: 400,
-                msg: '请选择要上传的评论图片'
+                msg: 'Please select review images to upload'
             });
         }
 
@@ -589,14 +589,14 @@ app.post('/api/upload/review-images', upload.array('reviewImages', 10), (req, re
 
         res.json({
             code: 200,
-            msg: `成功上传 ${req.files.length} 张评论图片`,
+            msg: `Successfully uploaded ${req.files.length} review images`,
             data: { reviewImagePaths }
         });
     } catch (err) {
-        console.error('❌ 评论图片上传错误:', err);
+        console.error('❌ Review image upload error:', err);
         res.json({
             code: 500,
-            msg: `评论图片上传失败: ${err.message}`
+            msg: `Review image upload failed: ${err.message}`
         });
     }
 });
@@ -611,7 +611,7 @@ app.delete('/api/delete/file', (req, res) => {
         if (!filePath) {
             return res.json({
                 code: 400,
-                msg: '文件路径不能为空'
+                msg: 'File path cannot be empty'
             });
         }
 
@@ -619,21 +619,21 @@ app.delete('/api/delete/file', (req, res) => {
         if (isDeleted) {
             res.json({
                 code: 200,
-                msg: '文件删除成功',
+                msg: 'File deleted successfully',
                 data: { filePath }
             });
         } else {
             res.json({
                 code: 404,
-                msg: '文件不存在或删除失败',
+                msg: 'File does not exist or deletion failed',
                 data: { filePath }
             });
         }
     } catch (err) {
-        console.error('❌ 删除文件API错误:', err);
+        console.error('❌ Delete file API error:', err);
         res.json({
             code: 500,
-            msg: `文件删除异常: ${err.message}`
+            msg: `File deletion exception: ${err.message}`
         });
     }
 });
@@ -641,16 +641,16 @@ app.delete('/api/delete/file', (req, res) => {
 // ===================== 启动服务器 =====================
 initDataFiles(); // 初始化默认配置文件
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n🚀 服务器已启动：`);
-    console.log(`- 访问地址: http://localhost:${PORT}`);
-    console.log(`- 管理页面: http://localhost:${PORT}/admin.html`);
-    console.log(`- 展示页面: http://localhost:${PORT}/index.html`);
-    console.log(`- 上传目录: ${uploadRoot}`);
-    console.log(`- 数据目录: ${dataDir}\n`);
+app.listen(PORT, () => {
+    console.log(`\n🚀 Server started:`);
+    console.log(`- Access URL: http://localhost:${PORT}`);
+    console.log(`- Admin page: http://localhost:${PORT}/admin.html`);
+    console.log(`- Display page: http://localhost:${PORT}/index.html`);
+    console.log(`- Upload directory: ${uploadRoot}`);
+    console.log(`- Data directory: ${dataDir}\n`);
 });
 
 // 全局未捕获异常处理（防止服务器崩溃）
 process.on('uncaughtException', (err) => {
-    console.error('💥 未捕获的异常:', err);
+    console.error('💥 Uncaught exception:', err);
 });
