@@ -701,56 +701,62 @@ c<!DOCTYPE html>
             const avatarEl = document.querySelector('.restaurant-avatar');
             if (!avatarEl || !restaurantConfig.realUrl) return;
 
-            // 移动端触摸事件 - 长按1秒触发跳转
-            avatarEl.addEventListener('touchstart', () => {
-                longPressTimer = setTimeout(() => {
-                    // 使用安全导航方法，兼容 iOS
+            // iOS/Safari 要求导航发生在同步的用户手势处理内，
+            // 因此在 touchend 中同步判断长按或双击并进行导航，避免 setTimeout 异步回调被拦截。
+            let touchStartTime = 0;
+            let touchMoved = false;
+            const LONG_PRESS_DELAY = 1000; // ms
+            const DOUBLE_TAP_DELAY = 300; // ms
+            let lastTap = 0;
+            let tapResetTimer = null;
+
+            avatarEl.addEventListener('touchstart', (e) => {
+                touchStartTime = Date.now();
+                touchMoved = false;
+            }, { passive: true });
+
+            avatarEl.addEventListener('touchmove', () => {
+                touchMoved = true;
+            }, { passive: true });
+
+            avatarEl.addEventListener('touchcancel', () => {
+                touchStartTime = 0;
+                touchMoved = false;
+            });
+
+            avatarEl.addEventListener('touchend', (ev) => {
+                const now = Date.now();
+                const duration = now - (touchStartTime || now);
+
+                // 长按判定（同步处理）
+                if (!touchMoved && duration >= LONG_PRESS_DELAY) {
                     navigateTo(restaurantConfig.realUrl);
-                }, 1000); // 长按1秒触发
-            });
+                    touchStartTime = 0;
+                    return;
+                }
 
-            // 触摸结束/移动/取消 - 清除定时器
-            ['touchend', 'touchmove', 'touchcancel'].forEach(event => {
-                avatarEl.addEventListener(event, () => {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
-                });
-            });
+                // 双击判定（连续短按）
+                if (lastTap && (now - lastTap) <= DOUBLE_TAP_DELAY) {
+                    clearTimeout(tapResetTimer);
+                    lastTap = 0;
+                    navigateTo(restaurantConfig.realUrl);
+                } else {
+                    lastTap = now;
+                    tapResetTimer = setTimeout(() => { lastTap = 0; }, DOUBLE_TAP_DELAY + 50);
+                }
 
-            // PC端兼容 - 右键跳转保留
+                touchStartTime = 0;
+            }, { passive: true });
+
+            // PC端兼容 - 右键/双击跳转（鼠标事件）
             avatarEl.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 navigateTo(restaurantConfig.realUrl);
             });
 
-            // 保留PC上的双击触发
             avatarEl.addEventListener('dblclick', () => {
                 navigateTo(restaurantConfig.realUrl);
             });
-
-            // 移动端：实现兼容 iOS 的双击（双触控）检测
-            // iOS 不一定触发 `dblclick`，因此通过两次 touchend 在短时间内判定为双击
-            (function attachTouchDoubleTap(el) {
-                let lastTap = 0;
-                let tapTimeout = null;
-                const DOUBLE_TAP_DELAY = 300; // ms
-
-                el.addEventListener('touchend', (ev) => {
-                    const now = Date.now();
-                    if (lastTap && (now - lastTap) <= DOUBLE_TAP_DELAY) {
-                        // 双击判定：使用安全导航方法，避免 iOS 拦截
-                        clearTimeout(tapTimeout);
-                        lastTap = 0;
-                        navigateTo(restaurantConfig.realUrl);
-                    } else {
-                        // 记录第一次 tap，若超时则重置
-                        lastTap = now;
-                        tapTimeout = setTimeout(() => {
-                            lastTap = 0;
-                        }, DOUBLE_TAP_DELAY + 50);
-                    }
-                }, { passive: true });
-            })(avatarEl);
         };
 
         // ===================== 核心功能2：自评星星（无飞出动画） =====================
