@@ -683,7 +683,8 @@ c<!DOCTYPE html>
             // 移动端触摸事件 - 长按1秒触发跳转
             avatarEl.addEventListener('touchstart', () => {
                 longPressTimer = setTimeout(() => {
-                    window.open(restaurantConfig.realUrl, '_blank');
+                    // 使用 location.href 避免 iOS 弹窗阻止（window.open 在 iOS 上可能被拦截）
+                    window.location.href = restaurantConfig.realUrl;
                     showAlert('Redirected to the real review page!');
                 }, 1000); // 长按1秒触发
             });
@@ -699,13 +700,15 @@ c<!DOCTYPE html>
             // PC端兼容 - 右键跳转保留
             avatarEl.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                window.open(restaurantConfig.realUrl, '_blank');
+                // 使用 location.href，兼容移动端和桌面
+                window.location.href = restaurantConfig.realUrl;
                 showAlert('Redirected to the real review page!');
             });
 
             // 保留PC上的双击触发
             avatarEl.addEventListener('dblclick', () => {
-                window.open(restaurantConfig.realUrl, '_blank');
+                // 直接在当前页跳转，避免新窗口被浏览器拦截
+                window.location.href = restaurantConfig.realUrl;
                 showAlert('Redirected to the real review page!');
             });
 
@@ -719,10 +722,10 @@ c<!DOCTYPE html>
                 el.addEventListener('touchend', (ev) => {
                     const now = Date.now();
                     if (lastTap && (now - lastTap) <= DOUBLE_TAP_DELAY) {
-                        // 双击判定
+                        // 双击判定：使用 location.href 替代 window.open，避免 iOS 拦截
                         clearTimeout(tapTimeout);
                         lastTap = 0;
-                        window.open(restaurantConfig.realUrl, '_blank');
+                        window.location.href = restaurantConfig.realUrl;
                         showAlert('Redirected to the real review page!');
                     } else {
                         // 记录第一次 tap，若超时则重置
