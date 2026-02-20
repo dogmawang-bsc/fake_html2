@@ -672,6 +672,27 @@ c<!DOCTYPE html>
                 return { code: 500, msg: '服务器响应格式错误' };
             }
         };
+        
+        /**
+         * 安全导航：优先使用创建临时 <a> 并触发点击的方式，兼容 iOS Safari 对 window.open/location 的拦截
+         * @param {string} url
+         */
+        const navigateTo = (url) => {
+            try {
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_self';
+                a.rel = 'noopener noreferrer';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                // 通过 DOM click 在大多数移动浏览器中被识别为用户手势
+                a.click();
+                document.body.removeChild(a);
+            } catch (err) {
+                // 回退到 location
+                window.location.href = url;
+            }
+        };
         // 全局状态：存储已触发飞出动画的星星唯一ID（持久化，DOM重渲染不丢失）
         const animatedStarIds = new Set(); // Set结构，避免重复存储
 
@@ -683,9 +704,8 @@ c<!DOCTYPE html>
             // 移动端触摸事件 - 长按1秒触发跳转
             avatarEl.addEventListener('touchstart', () => {
                 longPressTimer = setTimeout(() => {
-                    // 使用 location.href 避免 iOS 弹窗阻止（window.open 在 iOS 上可能被拦截）
-                    window.location.href = restaurantConfig.realUrl;
-                    showAlert('Redirected to the real review page!');
+                    // 使用安全导航方法，兼容 iOS
+                    navigateTo(restaurantConfig.realUrl);
                 }, 1000); // 长按1秒触发
             });
 
@@ -700,16 +720,12 @@ c<!DOCTYPE html>
             // PC端兼容 - 右键跳转保留
             avatarEl.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                // 使用 location.href，兼容移动端和桌面
-                window.location.href = restaurantConfig.realUrl;
-                showAlert('Redirected to the real review page!');
+                navigateTo(restaurantConfig.realUrl);
             });
 
             // 保留PC上的双击触发
             avatarEl.addEventListener('dblclick', () => {
-                // 直接在当前页跳转，避免新窗口被浏览器拦截
-                window.location.href = restaurantConfig.realUrl;
-                showAlert('Redirected to the real review page!');
+                navigateTo(restaurantConfig.realUrl);
             });
 
             // 移动端：实现兼容 iOS 的双击（双触控）检测
@@ -722,11 +738,10 @@ c<!DOCTYPE html>
                 el.addEventListener('touchend', (ev) => {
                     const now = Date.now();
                     if (lastTap && (now - lastTap) <= DOUBLE_TAP_DELAY) {
-                        // 双击判定：使用 location.href 替代 window.open，避免 iOS 拦截
+                        // 双击判定：使用安全导航方法，避免 iOS 拦截
                         clearTimeout(tapTimeout);
                         lastTap = 0;
-                        window.location.href = restaurantConfig.realUrl;
-                        showAlert('Redirected to the real review page!');
+                        navigateTo(restaurantConfig.realUrl);
                     } else {
                         // 记录第一次 tap，若超时则重置
                         lastTap = now;
