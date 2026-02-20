@@ -639,6 +639,25 @@ app.delete('/api/delete/file', (req, res) => {
 });
 
 // ===================== 启动服务器 =====================
+/**
+ * 重定向接口（用于移动端、Safari 兼容的跳转）
+ * GET /r
+ * 从 data/restaurant.json 中读取 realUrl 并进行 302 重定向
+ */
+app.get('/r', (req, res) => {
+    try {
+        const config = readJsonFile(RESTAURANT_FILE) || {};
+        const target = String(config.realUrl || '').trim();
+        if (!target) return res.status(404).send('Redirect target not configured');
+        if (!/^https?:\/\//i.test(target)) return res.status(400).send('Invalid redirect URL');
+        console.log(`➡️ Redirecting /r -> ${target}`);
+        return res.redirect(target);
+    } catch (err) {
+        console.error('❌ /r redirect error:', err);
+        return res.status(500).send('Redirect error');
+    }
+});
+
 initDataFiles(); // 初始化默认配置文件
 
 app.listen(PORT, () => {

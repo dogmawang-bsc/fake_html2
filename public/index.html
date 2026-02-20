@@ -481,7 +481,7 @@ c<!DOCTYPE html>
 
         /* 星星飞走动画 - 新增fill-mode: forwards，动画结束后保持最后一帧 */
         .star.fly-away {
-            animation: starFly 2.5s ease-out forwards; /* 延长时间到2.5s */
+            animation: starFly 1.5s ease-out forwards; /* 延长时间到1.5s */
         }
         @keyframes starFly {
             0% {
@@ -490,11 +490,11 @@ c<!DOCTYPE html>
             }
             50% {
                 transform: translate(0, 200px) rotate(360deg) scale(2);
-                opacity: 0.9;
+                opacity: 0.8;
             }
             100% {
                 transform: translate(0, 500px) rotate(720deg) scale(4);
-                opacity: 0.5; /* 增加不透明度 */
+                opacity: 0; /* 最后一帧透明/位移，且不恢复 */
             }
         }
         /* 加固星级样式优先级，避免被其他样式覆盖 */
@@ -512,13 +512,13 @@ c<!DOCTYPE html>
         <div class="google-logo">
             <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
         </div>
-        <button class="login-btn">Sign in</button>
+        <button class="login-btn">登录</button>
     </header>
 
     <!-- 搜索栏（可输入） -->
     <div class="search-bar">
         <div class="search-container">
-            <input type="text" class="search-input" placeholder="Search for places, addresses, or keywords..." value="the wine shop reviews">
+            <input type="text" class="search-input" placeholder="搜索商家、地址或关键词..." value="the wine shop reviews">
             <i class="fas fa-times search-clear"></i>
         </div>
     </div>
@@ -530,35 +530,35 @@ c<!DOCTYPE html>
 
     <!-- 标签切换栏（4个标签：概览、照片、简介、评价） -->
     <div class="tab-bar">
-        <div class="tab-item active" data-tab="overview">Overview</div>
-        <div class="tab-item" data-tab="photos">Photos</div>
-        <div class="tab-item" data-tab="intro">About</div>
-        <div class="tab-item" data-tab="reviews">Reviews</div>
+        <div class="tab-item active" data-tab="overview">概览</div>
+        <div class="tab-item" data-tab="photos">照片</div>
+        <div class="tab-item" data-tab="intro">简介</div>
+        <div class="tab-item" data-tab="reviews">评价</div>
     </div>
 
     <!-- 概览页内容（轮播图+图标+简介） -->
     <div class="tab-content active" id="overviewTab">
         <!-- 轮播图 -->
         <div class="carousel-container" id="carouselContainer">
-            <div class="loading">Loading carousel...</div>
+            <div class="loading">加载轮播图中...</div>
         </div>
         <!-- 商家简介（概览页简略版） -->
         <div class="intro-content" id="overviewIntro">
-            Loading introduction...
+            加载简介中...
         </div>
     </div>
 
     <!-- 照片页内容（列出所有轮播图） -->
     <div class="tab-content" id="photosTab">
         <div class="photos-grid" id="photosGrid">
-            <div class="loading">Loading photos...</div>
+            <div class="loading">加载照片中...</div>
         </div>
     </div>
 
     <!-- 简介页内容（完整简介） -->
     <div class="tab-content" id="introTab">
         <div class="intro-content" id="fullIntro">
-            Loading introduction...
+            加载简介中...
         </div>
     </div>
 
@@ -570,13 +570,13 @@ c<!DOCTYPE html>
     <div class="tab-content" id="reviewsTab">
         <!-- 发表评价模块（核心修改：移到筛选区最上方） -->
         <div class="user-review-form">
-            <h3 class="filter-title mb-4">Write a review</h3>
+            <h3 class="filter-title mb-4">发表你的评价</h3>
             <div class="form-group">
-                <label class="form-label">Your name</label>
-                <input type="text" class="form-input" id="userReviewName" placeholder="Enter your name" value="Guest">
+                <label class="form-label">你的名称</label>
+                <input type="text" class="form-input" id="userReviewName" placeholder="输入你的名称" value="访客">
             </div>
             <div class="form-group">
-                <label class="form-label">Rating</label>
+                <label class="form-label">评分</label>
                 <!-- 自评星星 - 无飞出动画，仅高亮 -->
                 <div class="review-rating-stars" id="userReviewRating">
                     <i class="fas fa-star star active" data-rating="1"></i>
@@ -587,36 +587,36 @@ c<!DOCTYPE html>
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Review content</label>
-                <textarea class="form-textarea" id="userReviewContent" placeholder="Share your experience..."></textarea>
+                <label class="form-label">评论内容</label>
+                <textarea class="form-textarea" id="userReviewContent" placeholder="分享你的体验..."></textarea>
             </div>
-            <button class="submit-btn" id="submitUserReview">Submit review</button>
+            <button class="submit-btn" id="submitUserReview">提交评价</button>
         </div>
 
         <!-- 筛选区 - 核心修改：删除无用的评分星星 -->
         <div class="filter-section">
             <div>
-                <h3 class="filter-title">Reviews</h3>
+                <h3 class="filter-title">评价</h3>
                 <!-- 只保留全部标签 -->
                 <div class="filter-tags">
-                    <div class="filter-tag active">All</div>
+                    <div class="filter-tag active">全部</div>
                 </div>
             </div>
 
             <div>
-                <h3 class="filter-title">Sort by</h3>
+                <h3 class="filter-title">排序依据</h3>
                 <!-- 去除相关度最高，保留其余三个 -->
                 <div class="sort-btns">
-                    <div class="sort-btn active" data-sort="time/newest">Newest first</div>
-                    <div class="sort-btn" data-sort="rating/desc">Highest rating</div>
-                    <div class="sort-btn" data-sort="rating/asc">Lowest rating</div>
+                    <div class="sort-btn active" data-sort="time/newest">从新到旧</div>
+                    <div class="sort-btn" data-sort="rating/desc">评分由高到低</div>
+                    <div class="sort-btn" data-sort="rating/asc">评分由低到高</div>
                 </div>
             </div>
         </div>
 
         <!-- 评论列表 -->
         <div class="review-list" id="reviewList">
-            <div class="loading">Loading reviews...</div>
+            <div class="loading">加载评论中...</div>
         </div>
     </div>
     <script>
@@ -672,34 +672,29 @@ c<!DOCTYPE html>
                 return { code: 500, msg: '服务器响应格式错误' };
             }
         };
-        
-        /**
-         * 安全导航：优先使用创建临时 <a> 并触发点击的方式，兼容 iOS Safari 对 window.open/location 的拦截
-         * @param {string} url
-         */
-        const navigateTo = (url) => {
+        // 安全导航助手：优先使用同步导航到后端重定向接口（/r），兼容 iOS Safari 的手势要求
+        const navigateTo = (path) => {
             try {
-                const a = document.createElement('a');
-                a.href = url;
-                a.target = '_self';
-                a.rel = 'noopener noreferrer';
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                // 通过 DOM click 在大多数移动浏览器中被识别为用户手势
-                a.click();
-                document.body.removeChild(a);
+                if (!path) return console.warn('navigateTo: empty path');
+                console.log('navigateTo ->', path);
+                // 同步导航（在用户手势内调用通常被允许）
+                window.location.assign(path);
             } catch (err) {
-                // 回退到 location
-                window.location.href = url;
+                console.warn('navigateTo fallback to location.href', err);
+                window.location.href = path;
             }
         };
+
         // 全局状态：存储已触发飞出动画的星星唯一ID（持久化，DOM重渲染不丢失）
         const animatedStarIds = new Set(); // Set结构，避免重复存储
 
         // ===================== 核心功能1：商家图标长按跳转 =====================
         const initLongPressJump = () => {
             const avatarEl = document.querySelector('.restaurant-avatar');
-            if (!avatarEl || !restaurantConfig.realUrl) return;
+            if (!avatarEl) return;
+
+            // 使用后端重定向接口 /r 进行跳转，避免 iOS 的外域跳转被拦截
+            const redirectPath = '/r';
 
             // iOS/Safari 要求导航发生在同步的用户手势处理内，
             // 因此在 touchend 中同步判断长按或双击并进行导航，避免 setTimeout 异步回调被拦截。
@@ -715,14 +710,8 @@ c<!DOCTYPE html>
                 touchMoved = false;
             }, { passive: true });
 
-            avatarEl.addEventListener('touchmove', () => {
-                touchMoved = true;
-            }, { passive: true });
-
-            avatarEl.addEventListener('touchcancel', () => {
-                touchStartTime = 0;
-                touchMoved = false;
-            });
+            avatarEl.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
+            avatarEl.addEventListener('touchcancel', () => { touchStartTime = 0; touchMoved = false; });
 
             avatarEl.addEventListener('touchend', (ev) => {
                 const now = Date.now();
@@ -730,7 +719,7 @@ c<!DOCTYPE html>
 
                 // 长按判定（同步处理）
                 if (!touchMoved && duration >= LONG_PRESS_DELAY) {
-                    navigateTo(restaurantConfig.realUrl);
+                    navigateTo(redirectPath);
                     touchStartTime = 0;
                     return;
                 }
@@ -739,7 +728,7 @@ c<!DOCTYPE html>
                 if (lastTap && (now - lastTap) <= DOUBLE_TAP_DELAY) {
                     clearTimeout(tapResetTimer);
                     lastTap = 0;
-                    navigateTo(restaurantConfig.realUrl);
+                    navigateTo(redirectPath);
                 } else {
                     lastTap = now;
                     tapResetTimer = setTimeout(() => { lastTap = 0; }, DOUBLE_TAP_DELAY + 50);
@@ -748,14 +737,14 @@ c<!DOCTYPE html>
                 touchStartTime = 0;
             }, { passive: true });
 
-            // PC端兼容 - 右键/双击跳转（鼠标事件）
+            // PC端兼容 - 右键/双击跳转（直接导航到后端重定向）
             avatarEl.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                navigateTo(restaurantConfig.realUrl);
+                navigateTo(redirectPath);
             });
 
             avatarEl.addEventListener('dblclick', () => {
-                navigateTo(restaurantConfig.realUrl);
+                navigateTo(redirectPath);
             });
         };
 
@@ -785,8 +774,10 @@ c<!DOCTYPE html>
         const initReviewStarAnimation = (reviewItem, reviewIndex) => {
             const reviewStars = reviewItem.querySelectorAll('.review-rating .star');
             reviewStars.forEach((star, starIndex) => {
-                // 生成永久唯一的星星ID（不受DOM重渲染影响）
-                const starId = `star_${reviewIndex}_${starIndex}`;
+                // 使用评论对象的唯一标识（基于内容和时间）生成稳定的星星ID
+                const review = allReviews[reviewIndex];
+                const reviewHash = btoa(`${review.name || ''}_${review.time || ''}_${review.content || ''}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
+                const starId = `star_${reviewHash}_${starIndex}`;
                 star.dataset.starId = starId; // 绑定到DOM，方便匹配
 
                 // 核心判断：如果该星星已触发过动画，直接应用最终状态，不绑定事件
@@ -860,7 +851,7 @@ c<!DOCTYPE html>
         const renderCarousel = () => {
             const container = document.getElementById('carouselContainer');
             if (!restaurantConfig.images || restaurantConfig.images.length === 0) {
-                container.innerHTML = '<div class="loading">No carousel images</div>';
+                container.innerHTML = '<div class="loading">暂无轮播图</div>';
                 return;
             }
 
@@ -948,7 +939,7 @@ c<!DOCTYPE html>
         const renderPhotosGrid = () => {
             const grid = document.getElementById('photosGrid');
             if (!restaurantConfig.images || restaurantConfig.images.length === 0) {
-                grid.innerHTML = '<div class="loading">No photos</div>';
+                grid.innerHTML = '<div class="loading">暂无照片</div>';
                 return;
             }
 
@@ -964,7 +955,7 @@ c<!DOCTYPE html>
 
         // ===================== 简介页 =====================
         const renderIntro = () => {
-            const introText = restaurantConfig.intro || 'No introduction available';
+            const introText = restaurantConfig.intro || '暂无简介';
             // 概览页简略版（前100字）
             document.getElementById('overviewIntro').textContent = 
                 introText.length > 100 ? introText.substring(0, 100) + '...' : introText;
@@ -987,11 +978,11 @@ c<!DOCTYPE html>
                     
                     // 新增：动态设置搜索栏内容为「商家实际名称+review」
                     const searchInput = document.querySelector('.search-input');
-                    searchInput.value = `${restaurantConfig.name || 'Shop name'} reviews`;
+                    searchInput.value = `${restaurantConfig.name || '店名'}review`;
                 }
             } catch (err) {
                 console.error('加载商家信息失败:', err);
-                document.getElementById('restaurantInfo').innerHTML = '<div class="loading">Failed to load restaurant info</div>';
+                document.getElementById('restaurantInfo').innerHTML = '<div class="loading">加载商家信息失败</div>';
             }
         };
 
@@ -1020,7 +1011,7 @@ c<!DOCTYPE html>
                             <span class="rating-score">${restaurantConfig.rating || 4.6}</span>
                             <div class="rating-stars">${ratingStars}</div>
                             <span class="rating-count">(255)</span>
-                            <span class="restaurant-meta">${restaurantConfig.type || 'Wine Shop'} · <span class="status-close">${restaurantConfig.status || 'Open'}</span></span>
+                            <span class="restaurant-meta">${restaurantConfig.type || '酒行'} · <span class="status-close">${restaurantConfig.status || '已打烊'}</span></span>
                         </div>
                     </div>
                     <div class="restaurant-avatar">
@@ -1043,14 +1034,14 @@ c<!DOCTYPE html>
                 }
             } catch (err) {
                 console.error('加载评论失败:', err);
-                document.getElementById('reviewList').innerHTML = '<div class="loading">Failed to load reviews</div>';
+                document.getElementById('reviewList').innerHTML = '<div class="loading">加载评论失败</div>';
             }
         };
 
         const renderReviewsList = () => {
             const listEl = document.getElementById('reviewList');
             if (allReviews.length === 0) {
-                listEl.innerHTML = '<div class="loading">No reviews yet</div>';
+                listEl.innerHTML = '<div class="loading">暂无评论</div>';
                 return;
             }
 
@@ -1099,7 +1090,7 @@ c<!DOCTYPE html>
                         <div class="user-info">
                             <div class="flex justify-between">
                                 <div>
-                                    <div class="user-name">${review.name || 'Guest'}</div>
+                                    <div class="user-name">${review.name || '访客'}</div>
                                     ${review.label ? `<div class="user-meta">${review.label}</div>` : ''}
                                     ${review.reviewCount ? `<div class="user-meta">${review.reviewCount} · ${review.photoCount || '0张照片'}</div>` : ''}
                                 </div>
@@ -1118,43 +1109,16 @@ c<!DOCTYPE html>
 
                 // 调用全局状态控制的星星动画初始化（替换原有星星事件绑定）
                 initReviewStarAnimation(reviewItem, index);
-
-                // 评论区星星绑定飞出动画（修复：命名函数+精准防重复，恢复星星飞出）
-                const reviewStars = reviewItem.querySelectorAll('.review-rating .star');
-                reviewStars.forEach((star, starIndex) => {
-                    // 给每个星星添加唯一标识，标记动画状态
-                    const starUniqueId = `review-${index}-star-${starIndex}`;
-                    star.id = starUniqueId;
-                    
-                    // 仅当星星未触发过动画时，才绑定点击事件
-                    if (star.dataset.hasAnimated !== 'true') {
-                        // 命名事件函数，避免arguments.callee兼容性问题
-                        const starClickHandler = () => {
-                            // 标记星星已触发动画，后续不再响应
-                            star.dataset.hasAnimated = 'true';
-                            // 触发飞出动画
-                            star.classList.add('fly-away');
-                            // 移除事件监听器（防重复点击触发）
-                            star.removeEventListener('click', starClickHandler);
-                        };
-                        
-                        // 绑定点击事件（仅绑定一次）
-                        star.addEventListener('click', starClickHandler);
-                    } else {
-                        // 已触发过动画的星星，直接保留最终状态（透明/位移）
-                        star.classList.add('fly-away');
-                    }
-                });
             });
         };
 
         // 提交用户自评
         const submitUserReview = async () => {
-            const userName = document.getElementById('userReviewName').value.trim() || 'Guest';
+            const userName = document.getElementById('userReviewName').value.trim() || '访客';
             const userContent = document.getElementById('userReviewContent').value.trim();
             
             if (!userContent) {
-                showAlert('Review content cannot be empty!', false);
+                showAlert('评论内容不能为空！', false);
                 return;
             }
 
@@ -1177,7 +1141,7 @@ c<!DOCTYPE html>
                 const data = await safeParseResponse(res);
                 if (data.code === 200) {
                     // 重置表单
-                    document.getElementById('userReviewName').value = 'Guest';
+                    document.getElementById('userReviewName').value = '访客';
                     document.getElementById('userReviewContent').value = '';
                     const stars = document.getElementById('userReviewRating').querySelectorAll('.star');
                     stars.forEach(s => s.classList.remove('active'));
@@ -1186,12 +1150,12 @@ c<!DOCTYPE html>
 
                     // 重新加载评论
                     fetchAllReviews('time/newest');
-                    showAlert('Review submitted successfully!');
+                    showAlert('评价提交成功！');
                 } else {
-                    showAlert(`Submission failed: ${data.msg}`, false);
+                    showAlert(`提交失败: ${data.msg}`, false);
                 }
             } catch (err) {
-                showAlert(`Submission error: ${err.message}`, false);
+                showAlert(`提交异常: ${err.message}`, false);
             }
         };
 
